@@ -1,0 +1,15 @@
+services:
+  dockerdns:
+    image: ghcr.io/kakatkarakshay/dockerdns:latest
+    container_name: dockerdns
+    environment:
+      DOMAIN: domain.local
+      DOCKER_NETWORK: appnet
+      LISTEN_ADDR: :53
+      TTL: "30"
+    ports:
+      - "53:53/udp"
+      - "53:53/tcp"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: unless-stopped

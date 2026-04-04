@@ -33,7 +33,7 @@ type resolver struct {
 func main() {
 	logger := log.New(os.Stdout, "", log.LstdFlags)
 
-	domain := strings.TrimSuffix(strings.TrimSpace(getEnv("DOMAIN", "saltbox.local")), ".")
+	domain := strings.TrimSuffix(strings.TrimSpace(getEnv("DOMAIN", "domain.local")), ".")
 	listenAddr := getEnv("LISTEN_ADDR", defaultListenAddr)
 	networkName := strings.TrimSpace(os.Getenv("DOCKER_NETWORK"))
 	ttl := parseTTL(getEnv("TTL", strconv.Itoa(defaultTTL)))

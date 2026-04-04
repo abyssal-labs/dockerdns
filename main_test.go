@@ -15,10 +15,10 @@ func TestMatchContainerName(t *testing.T) {
 		want   string
 		ok     bool
 	}{
-		{"sabnzbd.saltbox.local.", "saltbox.local", "sabnzbd", true},
-		{"plex.saltbox.local", "saltbox.local", "plex", true},
-		{"sab.nzbd.saltbox.local", "saltbox.local", "", false},
-		{"sabnzbd.other.local", "saltbox.local", "", false},
+		{"sabnzbd.domain.local.", "domain.local", "sabnzbd", true},
+		{"plex.domain.local", "domain.local", "plex", true},
+		{"sab.nzbd.domain.local", "domain.local", "", false},
+		{"sabnzbd.other.local", "domain.local", "", false},
 	}
 
 	for _, tt := range tests {
@@ -36,7 +36,7 @@ func TestSelectIPsPrefersRequestedNetwork(t *testing.T) {
 				"bridge": {
 					IPAddress: "172.17.0.5",
 				},
-				"saltbox": {
+				"appnet": {
 					IPAddress:         "172.19.0.5",
 					GlobalIPv6Address: "fd00::5",
 				},
@@ -44,7 +44,7 @@ func TestSelectIPsPrefersRequestedNetwork(t *testing.T) {
 		},
 	}
 
-	ips := selectIPs(inspect, "saltbox")
+	ips := selectIPs(inspect, "appnet")
 	if len(ips) != 2 {
 		t.Fatalf("expected 2 IPs, got %d", len(ips))
 	}

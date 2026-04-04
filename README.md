@@ -8,14 +8,14 @@ to the IP address of the running Docker container with that exact name.
 
 Example:
 
-`sabnzbd.saltbox.local` -> IP of the `sabnzbd` container
+`sabnzbd.domain.local` -> IP of the `sabnzbd` container
 
 It is intended for setups where Docker already has stable container names, but you want a private DNS suffix on top without adding labels, reverse proxies, or a full service discovery stack.
 
 ## What It Does
 
 - Watches the Docker API on demand by container name
-- Resolves exact single-label names such as `plex.saltbox.local`
+- Resolves exact single-label names such as `plex.domain.local`
 - Returns the container IP from a preferred Docker network if configured
 - Supports both UDP and TCP DNS on port `53`
 - Returns `NXDOMAIN` when the name does not match a running container
@@ -31,7 +31,7 @@ It is intended for setups where Docker already has stable container names, but y
 
 | Variable | Default | Description |
 | --- | --- | --- |
-| `DOMAIN` | `saltbox.local` | DNS suffix to match |
+| `DOMAIN` | `domain.local` | DNS suffix to match |
 | `DOCKER_NETWORK` | empty | Preferred Docker network when a container has multiple IPs |
 | `LISTEN_ADDR` | `:53` | Bind address for the DNS server |
 | `TTL` | `30` | TTL for returned DNS records in seconds |
@@ -40,8 +40,8 @@ It is intended for setups where Docker already has stable container names, but y
 
 - Query names must exactly match `container.domain`
 - Only one label before the domain is accepted
-- `sabnzbd.saltbox.local` works
-- `api.sabnzbd.saltbox.local` does not
+- `sabnzbd.domain.local` works
+- `api.sabnzbd.domain.local` does not
 - Matching is case-insensitive
 
 ## Run With Docker
@@ -49,8 +49,8 @@ It is intended for setups where Docker already has stable container names, but y
 ```bash
 docker run -d \
   --name dockerdns \
-  -e DOMAIN=saltbox.local \
-  -e DOCKER_NETWORK=saltbox \
+  -e DOMAIN=domain.local \
+  -e DOCKER_NETWORK=appnet \
   -p 53:53/udp \
   -p 53:53/tcp \
   -v /var/run/docker.sock:/var/run/docker.sock \
@@ -65,8 +65,8 @@ services:
     image: ghcr.io/kakatkarakshay/dockerdns:latest
     container_name: dockerdns
     environment:
-      DOMAIN: saltbox.local
-      DOCKER_NETWORK: saltbox
+      DOMAIN: domain.local
+      DOCKER_NETWORK: appnet
       TTL: "30"
     ports:
       - "53:53/udp"
@@ -76,12 +76,14 @@ services:
     restart: unless-stopped
 ```
 
+A ready-to-use example is also included in [`docker-compose.yml`](./docker-compose.yml).
+
 ## Example Queries
 
 ```bash
-dig @127.0.0.1 sabnzbd.saltbox.local
-dig @127.0.0.1 plex.saltbox.local
-dig @127.0.0.1 AAAA jellyfin.saltbox.local
+dig @127.0.0.1 sabnzbd.domain.local
+dig @127.0.0.1 plex.domain.local
+dig @127.0.0.1 AAAA jellyfin.domain.local
 ```
 
 ## How IP Selection Works
