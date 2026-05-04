@@ -24,10 +24,11 @@ const (
 )
 
 type resolver struct {
-	cli     *client.Client
-	domain  string
-	network string
-	ttl     uint32
+	cli         *client.Client
+	domain      string
+	network     string
+	ttl         uint32
+	disableIPv6 bool
 }
 
 func main() {
@@ -37,6 +38,7 @@ func main() {
 	listenAddr := getEnv("LISTEN_ADDR", defaultListenAddr)
 	networkName := strings.TrimSpace(os.Getenv("DOCKER_NETWORK"))
 	ttl := parseTTL(getEnv("TTL", strconv.Itoa(defaultTTL)))
+	disableIPv6 := strings.EqualFold(strings.TrimSpace(os.Getenv("DISABLE_IPV6")), "true")
 
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
@@ -45,10 +47,11 @@ func main() {
 	defer cli.Close()
 
 	r := &resolver{
-		cli:     cli,
-		domain:  strings.ToLower(domain),
-		network: networkName,
-		ttl:     ttl,
+		cli:         cli,
+		domain:      strings.ToLower(domain),
+		network:     networkName,
+		ttl:         ttl,
+		disableIPv6: disableIPv6,
 	}
 
 	dns.HandleFunc(".", r.handleDNS)
@@ -129,7 +132,7 @@ func (r *resolver) lookup(q dns.Question, containerName string) ([]dns.RR, error
 		return nil, err
 	}
 
-	targets := selectIPs(inspect, r.network)
+	targets := selectIPs(inspect, r.network, r.disableIPv6)
 	if len(targets) == 0 {
 		return nil, nil
 	}
@@ -153,7 +156,7 @@ func (r *resolver) lookup(q dns.Question, containerName string) ([]dns.RR, error
 	return answers, nil
 }
 
-func selectIPs(inspect container.InspectResponse, preferredNetwork string) []net.IP {
+func selectIPs(inspect container.InspectResponse, preferredNetwork string, disableIPv6 bool) []net.IP {
 	networks := inspect.NetworkSettings.Networks
 	if len(networks) == 0 {
 		return nil
@@ -161,7 +164,7 @@ func selectIPs(inspect container.InspectResponse, preferredNetwork string) []net
 
 	if preferredNetwork != "" {
 		if settings, ok := networks[preferredNetwork]; ok {
-			return settingsToIPs(settings)
+			return settingsToIPs(settings, disableIPv6)
 		}
 	}
 
@@ -172,7 +175,7 @@ func selectIPs(inspect container.InspectResponse, preferredNetwork string) []net
 	slices.Sort(names)
 
 	for _, name := range names {
-		ips := settingsToIPs(networks[name])
+		ips := settingsToIPs(networks[name], disableIPv6)
 		if len(ips) > 0 {
 			return ips
 		}
@@ -181,7 +184,7 @@ func selectIPs(inspect container.InspectResponse, preferredNetwork string) []net
 	return nil
 }
 
-func settingsToIPs(settings *network.EndpointSettings) []net.IP {
+func settingsToIPs(settings *network.EndpointSettings, disableIPv6 bool) []net.IP {
 	if settings == nil {
 		return nil
 	}
@@ -190,8 +193,10 @@ func settingsToIPs(settings *network.EndpointSettings) []net.IP {
 	if ip := net.ParseIP(settings.IPAddress); ip != nil {
 		ips = append(ips, ip)
 	}
-	if ip := net.ParseIP(settings.GlobalIPv6Address); ip != nil {
-		ips = append(ips, ip)
+	if !disableIPv6 {
+		if ip := net.ParseIP(settings.GlobalIPv6Address); ip != nil {
+			ips = append(ips, ip)
+		}
 	}
 	return ips
 }

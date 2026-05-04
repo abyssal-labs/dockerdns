@@ -44,7 +44,7 @@ func TestSelectIPsPrefersRequestedNetwork(t *testing.T) {
 		},
 	}
 
-	ips := selectIPs(inspect, "appnet")
+	ips := selectIPs(inspect, "appnet", false)
 	if len(ips) != 2 {
 		t.Fatalf("expected 2 IPs, got %d", len(ips))
 	}
@@ -53,5 +53,26 @@ func TestSelectIPsPrefersRequestedNetwork(t *testing.T) {
 	}
 	if !ips[1].Equal(net.ParseIP("fd00::5")) {
 		t.Fatalf("expected IPv6 from preferred network, got %v", ips[1])
+	}
+}
+
+func TestSelectIPsDisableIPv6(t *testing.T) {
+	inspect := container.InspectResponse{
+		NetworkSettings: &container.NetworkSettings{
+			Networks: map[string]*network.EndpointSettings{
+				"appnet": {
+					IPAddress:         "172.19.0.5",
+					GlobalIPv6Address: "fd00::5",
+				},
+			},
+		},
+	}
+
+	ips := selectIPs(inspect, "appnet", true)
+	if len(ips) != 1 {
+		t.Fatalf("expected 1 IP (IPv4 only), got %d: %v", len(ips), ips)
+	}
+	if !ips[0].Equal(net.ParseIP("172.19.0.5")) {
+		t.Fatalf("expected IPv4 172.19.0.5, got %v", ips[0])
 	}
 }
