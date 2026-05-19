@@ -54,7 +54,7 @@ docker run -d \
   -p 53:53/udp \
   -p 53:53/tcp \
   -v /var/run/docker.sock:/var/run/docker.sock \
-  ghcr.io/kakatkarakshay/dockerdns:latest
+  ghcr.io/abyssal-labs/dockerdns:latest
 ```
 
 ## Run With Docker Compose
@@ -62,7 +62,7 @@ docker run -d \
 ```yaml
 services:
   dockerdns:
-    image: ghcr.io/kakatkarakshay/dockerdns:latest
+    image: ghcr.io/abyssal-labs/dockerdns:latest
     container_name: dockerdns
     environment:
       DOMAIN: domain.local
@@ -112,4 +112,4 @@ docker build -t dockerdns:latest .
 
 ## Project Name
 
-Repository: `KakatkarAkshay/dockerdns`
+Repository: `abyssal-labs/dockerdns`

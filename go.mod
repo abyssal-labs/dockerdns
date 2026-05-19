@@ -1,4 +1,4 @@
-module github.com/KakatkarAkshay/dockerdns
+module github.com/abyssal-labs/dockerdns
 
 go 1.26.0
 

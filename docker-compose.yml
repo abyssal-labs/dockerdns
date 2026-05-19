@@ -1,6 +1,6 @@
 services:
   dockerdns:
-    image: ghcr.io/kakatkarakshay/dockerdns:latest
+    image: ghcr.io/abyssal-labs/dockerdns:latest
     container_name: dockerdns
     environment:
       DOMAIN: domain.local
